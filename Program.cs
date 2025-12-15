@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var isDatabaseInitialized = false;
 
 // Configurar logging detallado
 builder.Logging.ClearProviders();
@@ -102,9 +103,17 @@ app.MapGet("/health", async (AppDbContext dbContext) =>
 {
     try
     {
-        // Verificar conexión a la base de datos
-        var canConnect = await dbContext.Database.CanConnectAsync();
+        if (!isDatabaseInitialized)
+        {
+            return Results.Json(new
+            {
+                status = "initializing",
+                message = "Database is being initialized",
+                timestamp = DateTime.UtcNow
+            }, statusCode: 202); // 202 Accepted (en proceso)
+        }
 
+        var canConnect = await dbContext.Database.CanConnectAsync();
         return Results.Json(new
         {
             status = canConnect ? "healthy" : "unhealthy",
@@ -371,6 +380,7 @@ async Task SetupDatabaseAsync(WebApplication app)
         }
 
         Console.WriteLine("DATABASE SETUP COMPLETE\n");
+        isDatabaseInitialized = true;
     }
     catch (Exception ex)
     {
