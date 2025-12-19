@@ -48,5 +48,11 @@ namespace ProyectoFinalTecWeb.Controllers
             if (!ok || response is null) return Unauthorized();
             return Ok(response);
         }
+
+        //POST/auth/forgot-password
+
+
+
+        //POST/auth/reset-password
     }
 }
