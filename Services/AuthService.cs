@@ -275,5 +275,46 @@ namespace ProyectoFinalTecWeb.Services
             var bytes = RandomNumberGenerator.GetBytes(64);
             return Base64UrlEncoder.Encode(bytes);
         }
+
+        public async Task<string> ForgotPasswordAsync(Forgot_password dto)
+        {
+            var passenger = await _passengers.GetByEmailAddress(dto.Email);
+            if (passenger == null)
+            {
+                return "Pasajero no encontrado";
+            }
+            var now = DateTime.Now;
+            var totalMinutes = (now.Hour * 60) + now.Minute;
+
+            return totalMinutes.ToString();
+        }
+
+        public async Task<string> ResetPasswordAsync(Reset_password dto)
+        {
+            var passenger = await _passengers.GetByEmailAddress(dto.Email);
+
+            if (passenger == null)
+            {
+                return "Pasajero no encontrado";
+            }
+            if (!int.TryParse(dto.Token, out int tokenMinutes))
+            {
+                return "tokem no valido";
+            }
+            var now = DateTime.Now;
+            var currentMinutes = (now.Hour * 60) + now.Minute;
+            var difference = currentMinutes - tokenMinutes;
+
+            if (difference < 0 || difference > 15)
+            {
+                return "El token expirado";
+            }
+            var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+            passenger.PasswordHash = newPasswordHash;
+            await _passengers.Update(passenger);
+            return "Contraseña actualizada";
+        }
+
     }
 }
